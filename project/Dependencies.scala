@@ -7,6 +7,7 @@ object Dependencies {
 
   // must align with versions in .travis.yml
   val scala213 = "2.13.7"
+  val scala3   = "3.1.0"
 
   val logback = Seq("ch.qos.logback" % "logback-core" % "1.2.10")
 
@@ -19,7 +20,7 @@ object Dependencies {
     "specs2-core",
     "specs2-junit",
     "specs2-mock"
-  ).map("org.specs2" %% _ % specsVersion)
+  ).map("org.specs2" %% _ % specsVersion cross CrossVersion.for3Use2_13)
 
   val slf4jtest = Seq("uk.org.lidalia" % "slf4j-test" % "1.2.0")
 
@@ -48,8 +49,8 @@ object Dependencies {
 
   val asyncHttpClient = Seq("org.asynchttpclient" % "async-http-client" % "2.12.3")
 
-  val akkaStreams = Seq("com.typesafe.akka" %% "akka-stream" % "2.6.18")
-  val akkaHttp    = Seq("com.typesafe.akka" %% "akka-http" % "10.2.7")
+  val akkaStreams = Seq(("com.typesafe.akka" %% "akka-stream" % "2.6.18").cross(CrossVersion.for3Use2_13))
+  val akkaHttp    = Seq(("com.typesafe.akka" %% "akka-http"   % "10.2.7").cross(CrossVersion.for3Use2_13))
 
   val reactiveStreams = Seq("org.reactivestreams" % "reactive-streams" % "1.0.3")
 

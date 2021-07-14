@@ -88,7 +88,14 @@ lazy val commonSettings = Def.settings(
   ),
   licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")),
   scalaVersion := scala213,
-  crossScalaVersions := Seq(scala213),
+  crossScalaVersions := Seq(scala213, scala3),
+  conflictWarning := {
+    if (scalaBinaryVersion.value == "3") {
+      ConflictWarning("warn", sbt.Level.Warn, false)
+    } else {
+      conflictWarning.value
+    }
+  },
   scalacOptions ++= scalacOpts,
   Compile / doc / scalacOptions ++= Seq(
     "-Xfatal-warnings",
