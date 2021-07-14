@@ -8,6 +8,7 @@ object Dependencies {
   // must align with versions in .travis.yml
   val scala212 = "2.12.14"
   val scala213 = "2.13.6"
+  val scala3 = "3.0.3-RC1-bin-20210813-e4b421c-NIGHTLY"
 
   val logback = Seq("ch.qos.logback" % "logback-core" % "1.2.5")
 
@@ -20,7 +21,7 @@ object Dependencies {
     "specs2-core",
     "specs2-junit",
     "specs2-mock"
-  ).map("org.specs2" %% _ % specsVersion)
+  ).map("org.specs2" %% _ % specsVersion cross CrossVersion.for3Use2_13)
 
   val slf4jtest = Seq("uk.org.lidalia" % "slf4j-test" % "1.2.0")
 
@@ -28,7 +29,7 @@ object Dependencies {
 
   val scalaJava8Compat = Seq("org.scala-lang.modules" %% "scala-java8-compat" % "1.0.0")
 
-  val playJson = Seq("com.typesafe.play" %% "play-json" % "2.9.2")
+  val playJson = Seq("com.typesafe.play" %% "play-json" % "2.9.2" cross CrossVersion.for3Use2_13)
 
   val slf4jApi = Seq("org.slf4j" % "slf4j-api" % "1.7.32")
 
@@ -44,8 +45,8 @@ object Dependencies {
 
   val asyncHttpClient = Seq("org.asynchttpclient" % "async-http-client" % "2.12.3")
 
-  val akkaStreams = Seq("com.typesafe.akka" %% "akka-stream" % "2.6.15")
-  val akkaHttp    = Seq("com.typesafe.akka" %% "akka-http" % "10.2.6")
+  val akkaStreams = Seq("com.typesafe.akka" %% "akka-stream" % "2.6.15" cross CrossVersion.for3Use2_13)
+  val akkaHttp    = Seq("com.typesafe.akka" %% "akka-http" % "10.2.6" cross CrossVersion.for3Use2_13)
 
   val reactiveStreams = Seq("org.reactivestreams" % "reactive-streams" % "1.0.3")
 
