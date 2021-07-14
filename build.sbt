@@ -92,7 +92,14 @@ lazy val commonSettings = Def.settings(
     url("https://gitter.im/playframework/contributors")
   ),
   licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")),
-  scalaVersion := scala213,
+  scalaVersion := "3.0.1",
+  conflictWarning := {
+    if (scalaBinaryVersion.value == "3") {
+      ConflictWarning("warn", sbt.Level.Warn, false)
+    } else {
+      conflictWarning.value
+    }
+  },
   crossScalaVersions := Seq(scala213, scala212),
   scalacOptions ++= scalacOpts,
   Compile / doc / scalacOptions ++= Seq(
@@ -112,7 +119,7 @@ lazy val commonSettings = Def.settings(
 )
 
 lazy val shadedCommonSettings = Seq(
-  scalaVersion := scala213,
+  scalaVersion := "3.0.1",
   crossScalaVersions := Seq(scala213),
   // No need to cross publish the shaded libraries
   crossPaths := false,
