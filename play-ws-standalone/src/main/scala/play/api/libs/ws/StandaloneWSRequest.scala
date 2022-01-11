@@ -12,8 +12,8 @@ import scala.concurrent.duration.Duration
 /**
  * A WS Request builder.
  */
-trait StandaloneWSRequest {
-  type Self <: StandaloneWSRequest
+trait StandaloneWSRequest { self =>
+  type Self <: StandaloneWSRequest { type Self = self.Self }
   type Response <: StandaloneWSResponse
 
   /**
