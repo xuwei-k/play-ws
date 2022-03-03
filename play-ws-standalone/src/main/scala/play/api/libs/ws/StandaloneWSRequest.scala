@@ -20,7 +20,7 @@ trait StandaloneWSRequest {
   // signature the way that a self-recursive type parameter would.  The implementation
   // will always bind this to a relevant type, so we only have to make the compiler
   // happy here.
-  type Self <: StandaloneWSRequest { type Self <: StandaloneWSRequest.this.Self }
+  type Self <: StandaloneWSRequest
   type Response <: StandaloneWSResponse
 
   /**
