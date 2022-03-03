@@ -14,7 +14,7 @@ import scalariform.formatter.preferences._
 //---------------------------------------------------------------
 
 val scala212 = "2.12.13"
-val scala213 = "2.13.5"
+val scala213 = "2.13.8"
 
 resolvers ++= DefaultOptions.resolvers(snapshot = true)
 resolvers in ThisBuild += Resolver.sonatypeRepo("public")
@@ -25,6 +25,8 @@ dynverVTagPrefix in ThisBuild := false
 
 // We are publishing snapshots to Sonatype
 ThisBuild / dynverSonatypeSnapshots := true
+
+ThisBuild / version := "2.1.7-fork-2"
 
 // Sanity-check: assert that version comes from a tag (e.g. not a too-shallow clone)
 // https://github.com/dwijnand/sbt-dynver/#sanity-checking-the-version
@@ -68,7 +70,7 @@ lazy val mimaSettings = mimaDefaultSettings ++ Seq(
 )
 
 lazy val commonSettings = Def.settings(
-  organization := "com.typesafe.play",
+  organization := "com.github.xuwei-k",
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala213, scala212),
   scalacOptions ++= scalacOpts,
@@ -327,12 +329,12 @@ lazy val `play-ahc-ws-standalone` = project
         <dependency>
           <groupId>com.typesafe.play</groupId>
           <artifactId>shaded-asynchttpclient</artifactId>
-          <version>{version.value}</version>
+          <version>2.1.7</version>
         </dependency>,
         <dependency>
           <groupId>com.typesafe.play</groupId>
           <artifactId>shaded-oauth</artifactId>
-          <version>{version.value}</version>
+          <version>2.1.7</version>
         </dependency>
       ), node)
     }
