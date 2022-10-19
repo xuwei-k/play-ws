@@ -142,22 +142,24 @@ lazy val shadeAssemblySettings = commonSettings ++ shadedCommonSettings ++ Seq(
 
 val ahcMerge: MergeStrategy = CustomMergeStrategy("ahcMerge") { dependencies =>
   Right(dependencies.map { f =>
-    val out    = new java.io.ByteArrayOutputStream
-    val reader = new java.io.BufferedReader(new java.io.InputStreamReader(f.stream.apply()))
-    try {
-      reader.lines().forEach { line =>
-        // In AsyncHttpClientConfigDefaults.java, the shading renames the resource keys
-        // so we have to manually tweak the resource file to match.
-        val shadedline = line.replace("org.asynchttpclient", "play.shaded.ahc.org.asynchttpclient")
-        out.write(line.getBytes(IO.defaultCharset))
-        out.write(IO.Newline.getBytes(IO.defaultCharset))
-        out.write(shadedline.getBytes(IO.defaultCharset))
-        out.write(IO.Newline.getBytes(IO.defaultCharset))
+    val stream = () => {
+      val out    = new java.io.ByteArrayOutputStream
+      val reader = new java.io.BufferedReader(new java.io.InputStreamReader(f.stream.apply()))
+      try {
+        reader.lines().forEach { line =>
+          // In AsyncHttpClientConfigDefaults.java, the shading renames the resource keys
+          // so we have to manually tweak the resource file to match.
+          val shadedline = line.replace("org.asynchttpclient", "play.shaded.ahc.org.asynchttpclient")
+          out.write(line.getBytes(IO.defaultCharset))
+          out.write(IO.Newline.getBytes(IO.defaultCharset))
+          out.write(shadedline.getBytes(IO.defaultCharset))
+          out.write(IO.Newline.getBytes(IO.defaultCharset))
+        }
+      } finally {
+        reader.close()
       }
-    } finally {
-      reader.close()
+      new java.io.ByteArrayInputStream(out.toByteArray)
     }
-    val stream = () => new java.io.ByteArrayInputStream(out.toByteArray)
     JarEntry(target = f.target, stream = stream)
   }.toVector)
 }
