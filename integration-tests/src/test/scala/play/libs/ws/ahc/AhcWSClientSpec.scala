@@ -4,12 +4,16 @@
 
 package play.libs.ws.ahc
 
-import akka.http.scaladsl.server.Route
+import play.api.routing.sird._
 import akka.stream.javadsl.Sink
 import akka.util.ByteString
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
-import play.AkkaServerProvider
+import play.NettyServerProvider
+import play.api.BuiltInComponents
+import play.api.mvc.AnyContentAsText
+import play.api.mvc.AnyContentAsXml
+import play.api.mvc.Results
 import play.libs.ws._
 
 import scala.jdk.FutureConverters._
@@ -17,20 +21,28 @@ import scala.concurrent.Future
 
 class AhcWSClientSpec
     extends AnyWordSpec
-    with AkkaServerProvider
+    with NettyServerProvider
     with StandaloneWSClientSupport
     with ScalaFutures
     with XMLBodyWritables
     with XMLBodyReadables {
 
-  override val routes: Route = {
-    import akka.http.scaladsl.server.Directives._
-    get {
-      complete("<h1>Say hello to akka-http</h1>")
-    } ~
-      post {
-        entity(as[String]) { echo =>
-          complete(echo)
+  override def routes(components: BuiltInComponents) = {
+    case GET(_) =>
+      components.defaultActionBuilder {
+        Results.Ok(
+          <h1>Say hello to play</h1>
+        )
+      }
+    case POST(_) =>
+      components.defaultActionBuilder { req =>
+        req.body match {
+          case AnyContentAsText(txt) =>
+            Results.Ok(txt)
+          case AnyContentAsXml(xml) =>
+            Results.Ok(xml)
+          case _ =>
+            Results.NotFound
         }
       }
   }
@@ -54,7 +66,7 @@ class AhcWSClientSpec
       val result: Future[ByteString] = future.flatMap { (response: StandaloneWSResponse) =>
         response.getBodyAsSource.runWith(Sink.head[ByteString](), materializer).asScala
       }
-      val expected: ByteString = ByteString.fromString("<h1>Say hello to akka-http</h1>")
+      val expected: ByteString = ByteString.fromString("<h1>Say hello to play</h1>")
       assert(result.futureValue == expected)
     }
 

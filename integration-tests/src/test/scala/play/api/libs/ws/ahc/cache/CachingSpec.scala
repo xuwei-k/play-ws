@@ -4,23 +4,24 @@
 
 package play.api.libs.ws.ahc.cache
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.server.Route
+import play.api.routing.sird._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.Mockito.when
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
-import play.AkkaServerProvider
+import play.NettyServerProvider
+import play.api.BuiltInComponents
 import play.api.libs.ws.ahc._
 import play.api.libs.ws.DefaultBodyReadables._
+import play.api.mvc.Handler
+import play.api.mvc.RequestHeader
+import play.api.mvc.Results
 import play.shaded.ahc.org.asynchttpclient._
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
-class CachingSpec extends AnyWordSpec with AkkaServerProvider with ScalaFutures {
+class CachingSpec extends AnyWordSpec with NettyServerProvider {
 
   private def mock[A](implicit a: ClassTag[A]): A =
     Mockito.mock(a.runtimeClass).asInstanceOf[A]
@@ -31,14 +32,12 @@ class CachingSpec extends AnyWordSpec with AkkaServerProvider with ScalaFutures 
     new DefaultAsyncHttpClient(ahcConfig)
   }
 
-  override val routes: Route = {
-    import akka.http.scaladsl.server.Directives._
-    path("hello") {
-      respondWithHeader(RawHeader("Cache-Control", "public")) {
-        val httpEntity = HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>")
-        complete(httpEntity)
-      }
-    }
+  def routes(components: BuiltInComponents): PartialFunction[RequestHeader, Handler] = { case GET(p"/hello") =>
+    components.defaultActionBuilder(
+      Results
+        .Ok(<h1>Say hello to play</h1>)
+        .withHeaders(("Cache-Control", "public"))
+    )
   }
 
   override def afterAll(): Unit = {
@@ -58,7 +57,7 @@ class CachingSpec extends AnyWordSpec with AkkaServerProvider with ScalaFutures 
       ws.url(s"http://localhost:$testServerPort/hello")
         .get()
         .map { response =>
-          assert(response.body[String] == "<h1>Say hello to akka-http</h1>")
+          assert(response.body[String] == "<h1>Say hello to play</h1>")
         }
         .futureValue
 
