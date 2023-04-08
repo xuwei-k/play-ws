@@ -10,10 +10,8 @@ import akka.http.scaladsl.server.Route
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.Mockito.when
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.matcher.FutureMatchers
-import org.specs2.mutable.Specification
-import org.specs2.specification.AfterAll
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.wordspec.AnyWordSpec
 import play.AkkaServerProvider
 import play.api.libs.ws.ahc._
 import play.api.libs.ws.DefaultBodyReadables._
@@ -22,11 +20,7 @@ import play.shaded.ahc.org.asynchttpclient._
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
-class CachingSpec(implicit val executionEnv: ExecutionEnv)
-    extends Specification
-    with AkkaServerProvider
-    with AfterAll
-    with FutureMatchers {
+class CachingSpec extends AnyWordSpec with AkkaServerProvider with ScalaFutures {
 
   private def mock[A](implicit a: ClassTag[A]): A =
     Mockito.mock(a.runtimeClass).asInstanceOf[A]
@@ -64,12 +58,11 @@ class CachingSpec(implicit val executionEnv: ExecutionEnv)
       ws.url(s"http://localhost:$testServerPort/hello")
         .get()
         .map { response =>
-          response.body[String] must be_==("<h1>Say hello to akka-http</h1>")
+          assert(response.body[String] == "<h1>Say hello to akka-http</h1>")
         }
-        .await
+        .futureValue
 
       Mockito.verify(cache).get(EffectiveURIKey("GET", new java.net.URI(s"http://localhost:$testServerPort/hello")))
-      success
     }
   }
 }

@@ -5,9 +5,8 @@
 package play.libs.ws.ahc
 
 import akka.http.scaladsl.server.Route
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.concurrent.FutureAwait
-import org.specs2.mutable.Specification
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.wordspec.AnyWordSpec
 import play.AkkaServerProvider
 import play.libs.ws.DefaultBodyWritables
 import play.libs.ws.DefaultWSCookie
@@ -20,11 +19,11 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory
 import scala.jdk.CollectionConverters._
 import scala.jdk.FutureConverters._
 
-class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
-    extends Specification
+class AhcCurlRequestLoggerSpec
+    extends AnyWordSpec
     with AkkaServerProvider
     with StandaloneWSClientSupport
-    with FutureAwait
+    with ScalaFutures
     with DefaultBodyWritables {
 
   override def routes: Route = {
@@ -53,9 +52,9 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
         .setRequestFilter(curlRequestLogger)
         .get()
         .asScala
-        .awaitFor(defaultTimeout)
+        .futureValue
 
-      testLogger.getLoggingEvents.asScala.map(_.getMessage) must containMatch("--verbose")
+      assert(testLogger.getLoggingEvents.asScala.map(_.getMessage).exists(_.contains("--verbose")))
     }
 
     "add all headers" in withClient() { client =>
@@ -68,11 +67,11 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
         .setRequestFilter(curlRequestLogger)
         .get()
         .asScala
-        .awaitFor(defaultTimeout)
+        .futureValue
 
       val messages = testLogger.getLoggingEvents.asScala.map(_.getMessage)
 
-      messages must containMatch("--header 'My-Header: My-Header-Value'")
+      assert(messages.exists(_.contains("--header 'My-Header: My-Header-Value'")))
     }
 
     "add all cookies" in withClient() { client =>
@@ -85,11 +84,11 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
         .setRequestFilter(curlRequestLogger)
         .get()
         .asScala
-        .awaitFor(defaultTimeout)
+        .futureValue
 
       val messages = testLogger.getLoggingEvents.asScala.map(_.getMessage)
 
-      messages must containMatch("""--cookie 'cookie1=value1'""")
+      assert(messages.exists(_.contains("""--cookie 'cookie1=value1'""")))
     }
 
     "add method" in withClient() { client =>
@@ -101,9 +100,11 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
         .setRequestFilter(curlRequestLogger)
         .get()
         .asScala
-        .awaitFor(defaultTimeout)
+        .futureValue
 
-      testLogger.getLoggingEvents.asScala.map(_.getMessage) must containMatch("--request GET")
+      assert(
+        testLogger.getLoggingEvents.asScala.map(_.getMessage).exists(_.contains("--request GET"))
+      )
     }
 
     "add authorization header" in withClient() { client =>
@@ -116,14 +117,20 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
         .setRequestFilter(curlRequestLogger)
         .get()
         .asScala
-        .awaitFor(defaultTimeout)
+        .futureValue
 
-      testLogger.getLoggingEvents.asScala.map(_.getMessage) must containMatch(
-        """--header 'Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ='"""
+      assert(
+        testLogger.getLoggingEvents.asScala
+          .map(_.getMessage)
+          .exists(
+            _.contains(
+              """--header 'Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ='"""
+            )
+          )
       )
     }
 
-    "handle body" in {
+    "handle body" should {
 
       "add when in memory" in withClient() { client =>
         val testLogger        = createTestLogger
@@ -135,9 +142,9 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
           .setRequestFilter(curlRequestLogger)
           .get()
           .asScala
-          .awaitFor(defaultTimeout)
+          .futureValue
 
-        testLogger.getLoggingEvents.asScala.map(_.getMessage) must containMatch("the-body")
+        assert(testLogger.getLoggingEvents.asScala.map(_.getMessage).exists(_.contains("the-body")))
       }
 
       "do nothing for empty bodies" in withClient() { client =>
@@ -150,9 +157,9 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
           .setRequestFilter(curlRequestLogger)
           .get()
           .asScala
-          .awaitFor(defaultTimeout)
+          .futureValue
 
-        testLogger.getLoggingEvents.asScala.map(_.getMessage) must not containMatch "--data"
+        assert(testLogger.getLoggingEvents.asScala.map(_.getMessage).forall(!_.contains("--data")))
       }
     }
 
@@ -168,18 +175,19 @@ class AhcCurlRequestLoggerSpec(implicit val executionEnv: ExecutionEnv)
         .setRequestFilter(curlRequestLogger)
         .get()
         .asScala
-        .awaitFor(defaultTimeout)
+        .futureValue
 
-      testLogger.getLoggingEvents.get(0).getMessage must beEqualTo(
-        s"""
-           |curl \\
-           |  --verbose \\
-           |  --request GET \\
-           |  --header 'Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=' \\
-           |  --header 'content-type: text/plain' \\
-           |  --header 'My-Header: My-Header-Value' \\
-           |  --data 'the-body' \\
-           |  'http://localhost:$testServerPort/'
+      assert(
+        testLogger.getLoggingEvents.get(0).getMessage ==
+          s"""
+             |curl \\
+             |  --verbose \\
+             |  --request GET \\
+             |  --header 'Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=' \\
+             |  --header 'content-type: text/plain' \\
+             |  --header 'My-Header: My-Header-Value' \\
+             |  --data 'the-body' \\
+             |  'http://localhost:$testServerPort/'
         """.stripMargin.trim
       )
     }
